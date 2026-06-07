@@ -118,12 +118,19 @@ def gerar_recomendacao(resultados_ciclo):
         elif status == "ATENÇÃO":
             atencao.append(nomes_sensores[i])
 
+    # Caso 1: tudo dentro do normal
     if not criticos and not atencao:
         return "Manter operação normal e continuar monitoramento."
 
+    # Caso 2: situação grave — 3 ou mais sensores críticos
     if len(criticos) >= 3:
         return "Ativar modo de segurança e priorizar suporte à vida, energia e comunicação."
 
+    # Caso 3: muitos sensores apenas em atenção, sem nenhum crítico
+    if not criticos and len(atencao) >= 3:
+        return "Monitorar sistemas em atenção e preparar plano de contingência."
+
+    # Caso 4: recomendação detalhada por sensor
     partes = []
     for sensor in criticos:
         partes.append(acoes_criticas[sensor].capitalize())
@@ -175,17 +182,23 @@ def analisar_ciclo(ciclo):
 # -----------------------------------------------------------
 
 def exibir_ciclo(numero_ciclo, ciclo, resultados, pontuacao, classificacao, recomendacao):
-    """Imprime no terminal as informações detalhadas de um ciclo."""
+    """Imprime no terminal as informações detalhadas de um ciclo, com colunas alinhadas."""
     temperatura, comunicacao, bateria, oxigenio, estabilidade = ciclo
     r_temp, r_com, r_bat, r_oxi, r_est = resultados
 
+    # (rótulo, valor formatado, resultado do sensor)
+    linhas = [
+        ("Temperatura",  f"{temperatura} °C", r_temp),
+        ("Comunicação",  f"{comunicacao}%",   r_com),
+        ("Bateria",      f"{bateria}%",        r_bat),
+        ("Oxigênio",     f"{oxigenio}%",       r_oxi),
+        ("Estabilidade", f"{estabilidade}%",   r_est),
+    ]
+
     print(f"\nCICLO {numero_ciclo}")
     print("-" * 60)
-    print(f"Temperatura: {temperatura} °C | {r_temp[0]} | {r_temp[2]}")
-    print(f"Comunicação: {comunicacao}%   | {r_com[0]} | {r_com[2]}")
-    print(f"Bateria:     {bateria}%       | {r_bat[0]} | {r_bat[2]}")
-    print(f"Oxigênio:   {oxigenio}%       | {r_oxi[0]} | {r_oxi[2]}")
-    print(f"Estabilidade:{estabilidade}% | {r_est[0]} | {r_est[2]}")
+    for nome, valor, (status, _, descricao) in linhas:
+        print(f"{nome + ':':<13} {valor:>6} | {status:<7} | {descricao}")
     print(f"\nPontuação de risco do ciclo: {pontuacao}")
     print(f"Classificação do ciclo: {classificacao}")
     print(f"Recomendação: {recomendacao}")
@@ -197,18 +210,19 @@ def exibir_ciclo(numero_ciclo, ciclo, resultados, pontuacao, classificacao, reco
 
 def gerar_relatorio_final(riscos, pontos_por_area, tendencia, nome_missao):
     """Imprime o relatório consolidado da missão."""
-    num_ciclos      = len(dados_missao)
-    medias          = []
+    num_ciclos = len(dados_missao)
+
+    # Média de cada coluna/sensor ao longo dos ciclos
+    medias = []
     for col in range(5):
         total = sum(dados_missao[linha][col] for linha in range(num_ciclos))
         medias.append(total / num_ciclos)
 
-    risco_medio     = sum(riscos) / num_ciclos
-    ciclo_critico   = riscos.index(max(riscos)) + 1
-    maior_risco     = max(riscos)
-    qtd_criticos    = sum(1 for r in riscos if r >= 6)
-    area_afetada    = identificar_area_mais_afetada(pontos_por_area)
-    risco_medio_val = sum(riscos) / num_ciclos
+    risco_medio   = sum(riscos) / num_ciclos
+    ciclo_critico = riscos.index(max(riscos)) + 1
+    maior_risco   = max(riscos)
+    qtd_criticos  = sum(1 for r in riscos if r >= 6)
+    area_afetada  = identificar_area_mais_afetada(pontos_por_area)
 
     # Classificação final com base na média de risco
     if risco_medio <= 2:
@@ -231,7 +245,7 @@ def gerar_relatorio_final(riscos, pontos_por_area, tendencia, nome_missao):
     print(f"Média de estabilidade: {medias[4]:.2f}%")
     print(f"\nCiclo mais crítico:        Ciclo {ciclo_critico}")
     print(f"Maior pontuação de risco:  {maior_risco}")
-    print(f"Risco médio da missão:     {risco_medio_val:.2f}")
+    print(f"Risco médio da missão:     {risco_medio:.2f}")
     print(f"Quantidade de ciclos críticos: {qtd_criticos}")
     print(f"\nTendência da missão:")
     print(f"  {tendencia}")
@@ -325,4 +339,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
