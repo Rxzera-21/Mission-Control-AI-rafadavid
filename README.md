@@ -129,5 +129,5 @@ Pontuação máxima por ciclo: **10 pontos** (5 sensores × 2 pontos).
 
 ## 👨‍🚀 Equipe
 
-**Missão:**   
+**Missão:** Prometheus Deep Scan  
 **Equipe:** Equipe Horizon
